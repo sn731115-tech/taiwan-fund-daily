@@ -1,0 +1,23 @@
+name: 基金每日快報
+
+on:
+  schedule:
+    - cron: '0 11 * * *'   # UTC 11:00 = 台灣時間晚上 7 點
+  workflow_dispatch:       # 允許手動執行
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: 設定 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: 安裝依賴
+        run: pip install requests beautifulsoup4
+      
+      - name: 執行基金抓取腳本
+        run: python fund_daily_report.py
