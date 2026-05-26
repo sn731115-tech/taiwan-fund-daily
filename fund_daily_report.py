@@ -23,7 +23,6 @@ def get_fund_data(code):
         resp.encoding = 'utf-8'
         soup = BeautifulSoup(resp.text, 'html.parser')
         
-        # 抓取最新淨值、漲跌、漲跌幅
         row = soup.find('td', string=lambda t: t and '最新值' in t)
         if row:
             tr = row.find_parent('tr')
@@ -45,20 +44,29 @@ def save_to_csv(data):
             writer.writerow(["日期", "基金名稱", "最新淨值", "今日漲跌", "漲跌幅"])
         writer.writerows(data)
 
-def main():
+def generate_report():
     today = datetime.now().strftime("%Y-%m-%d %H:%M")
-    print(f"🕖 {today} 台灣基金每日快報")
-    print("=" * 50)
+    report = f"🕖 {today} 台灣基金每日快報\n"
+    report += "=" * 50 + "\n\n"
     
     report_data = []
+    summary = []
+    
     for fund in FUNDS:
         time.sleep(1)
         nav, change, pct = get_fund_data(fund["code"])
-        print(f"• {fund['name']:<18} 淨值: {nav:>8}  漲跌: {change:>8}  {pct}")
+        line = f"• {fund['name']:<18} 淨值: {nav:>8}  漲跌: {change:>8}  {pct}"
+        report += line + "\n"
+        summary.append(f"{fund['name']}: {pct}")
         report_data.append([today.split()[0], fund["name"], nav, change, pct])
     
     save_to_csv(report_data)
-    print(f"\n✅ 今日資料已記錄！共 {len(FUNDS)} 檔基金")
+    report += f"\n✅ 共 {len(FUNDS)} 檔基金 | 資料來源：MoneyDJ"
+    return report, summary
 
 if __name__ == "__main__":
-    main()
+    report_text, _ = generate_report()
+    print(report_text)
+    # 把報告存成檔案，方便 GitHub Actions 讀取寄信
+    with open("daily_report.txt", "w", encoding="utf-8") as f:
+        f.write(report_text)
