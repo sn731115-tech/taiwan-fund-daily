@@ -1,9 +1,9 @@
-name: 基金每日快報
+name: 基金每日快報 + Email
 
 on:
   schedule:
-    - cron: '0 11 * * *'   # UTC 11:00 = 台灣時間晚上 7 點
-  workflow_dispatch:       # 允許手動執行
+    - cron: '0 11 * * *'   # 台灣時間晚上 7 點
+  workflow_dispatch:
 
 jobs:
   report:
@@ -21,3 +21,16 @@ jobs:
       
       - name: 執行基金抓取腳本
         run: python fund_daily_report.py
+      
+      - name: 寄送 Email 通知
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.GMAIL_USERNAME }}
+          password: ${{ secrets.GMAIL_APP_PASSWORD }}
+          subject: 基金每日快報 - \( {{ github.event_name == 'schedule' && '自動' || '手動' }} ( \){{ vars.REPORT_DATE || '今日' }})
+          body: file://daily_report.txt
+          to: ${{ secrets.GMAIL_TO }}
+          from: ${{ secrets.GMAIL_USERNAME }}
+          secure: true
