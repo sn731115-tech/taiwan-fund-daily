@@ -1,0 +1,31 @@
+name: 基金每日快報 + Discord
+
+on:
+  schedule:
+    - cron: '0 11 * * *'   # 台灣時間晚上 7 點
+  workflow_dispatch:
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: 設定 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      
+      - name: 安裝依賴
+        run: pip install requests beautifulsoup4
+      
+      - name: 執行基金抓取腳本
+        run: python fund_daily_report.py
+      
+      - name: 寄送 Discord 通知
+        uses: tsickert/discord-webhook@v7.0.0
+        with:
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
+          content: file://daily_report.txt
+          username: "基金每日快報"
+          avatar-url: "https://i.imgur.com/0Z2v5nE.png"   # 可選
