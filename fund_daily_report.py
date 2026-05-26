@@ -11,6 +11,7 @@ FUNDS = [
     {"name": "復華全方位",       "code": "acfh15"},
     {"name": "路博邁台灣5G",     "code": "acnb01"},
     {"name": "施羅德台灣樂活中小", "code": "aces10"},
+    {"name": "統一台灣動力基金", "code": "acps23"},
 ]
 
 CSV_FILE = "fund_daily_history.csv"
@@ -46,27 +47,20 @@ def save_to_csv(data):
 
 def generate_report():
     today = datetime.now().strftime("%Y-%m-%d %H:%M")
-    report = f"🕖 {today} 台灣基金每日快報\n"
-    report += "=" * 50 + "\n\n"
-    
-    report_data = []
-    summary = []
+    report = f"🕖 **{today} 台灣基金每日快報**\n"
+    report += "=" * 45 + "\n\n"
     
     for fund in FUNDS:
         time.sleep(1)
         nav, change, pct = get_fund_data(fund["code"])
-        line = f"• {fund['name']:<18} 淨值: {nav:>8}  漲跌: {change:>8}  {pct}"
-        report += line + "\n"
-        summary.append(f"{fund['name']}: {pct}")
-        report_data.append([today.split()[0], fund["name"], nav, change, pct])
+        report += f"• **{fund['name']}**\n   淨值: {nav}   漲跌: {change}   {pct}\n\n"
     
-    save_to_csv(report_data)
-    report += f"\n✅ 共 {len(FUNDS)} 檔基金 | 資料來源：MoneyDJ"
-    return report, summary
+    save_to_csv([[today.split()[0], f["name"], *get_fund_data(f["code"])] for f in FUNDS])
+    report += f"✅ 共 {len(FUNDS)} 檔基金 | 資料來源：MoneyDJ"
+    return report
 
 if __name__ == "__main__":
-    report_text, _ = generate_report()
+    report_text = generate_report()
     print(report_text)
-    # 把報告存成檔案，方便 GitHub Actions 讀取寄信
     with open("daily_report.txt", "w", encoding="utf-8") as f:
         f.write(report_text)
